@@ -74,18 +74,51 @@ def defineOctMap():
             [None,       C(x+f*1,y+f*2.5), C(x+f*2,y+f*2), C(x+f*3,y+f*1.5), C(x+f*4,y+f*1)],
             [None,       None,             C(x+f*2,y+f*3), C(x+f*3,y+f*2.5), C(x+f*4,y+f*2)]]
 
+def isMainColors(c):
+    # white
+    if isWhite(c):
+        return True
+    # purple
+    if c == (184, 54, 255):
+        return True
+    # red
+    if c == (193, 10, 10):
+        return True
+    # green
+    if c == (26, 198, 7):
+        return True
+    # yellow
+    if c == (234, 206, 1):
+        return True
+    # blue
+    if c == (31, 126, 255):
+        return True
+    # orange
+    if c == (255, 123, 1):
+        return True
+
+    return False
+
 def get_most_common_color(screenshot, x, y, radius=16):
     # List to hold the colors found within the radius
     colors = []
 
+    lb = x - radius
+    rb = x + radius + 1
+    tb = y - radius
+    bb = y + radius // 2
+
+    # cropped_image = screenshot.crop((lb, tb, rb, bb))
+    # cropped_image.save("cropped_image.png")
+
     # Iterate over the square bounding box
-    for i in range(x - radius, x + radius + 1):
-        for j in range(y - radius, y + radius + 1):
+    for i in range(lb, rb):
+        for j in range(tb, bb):
             # Check if the point is within the circle (radius)
             if math.sqrt((i - x) ** 2 + (j - y) ** 2) <= radius:
                 # Get the color of the pixel
                 color = screenshot.getpixel((i, j))
-                if color != (31,31,31):
+                if isMainColors(color):
                     colors.append(color)
 
     # Count the frequency of each color
@@ -107,7 +140,7 @@ def drugAndDrop(start: C, end: C):
     global win
     pyautogui.moveTo(win.x + start.x, win.y + start.y,duration=0)
     pyautogui.mouseDown(duration=0)
-    pyautogui.moveTo(win.x + end.x, win.y + end.y + e,duration=0)
+    pyautogui.moveTo(win.x + end.x, win.y + end.y + e,duration=0.1)
     pyautogui.mouseUp(duration=0)
 
 
@@ -262,12 +295,42 @@ def restart():
     
     pyautogui.sleep(0.5)
 
+def toPrintableColor(c):
+    if c == None:
+        return "_"
+
+    color_code = f"\033[48;2;{c[0]};{c[1]};{c[2]}m"
+    reset_code = "\033[0m"
+
+    # white
+    if isMainColors(c):
+        return f"{color_code} {reset_code}"
+    
+    return f"{color_code}U{reset_code}"
+
+def printColMap(iteration, colMap):
+    print("Iteration:", iteration)
+    for i in range(0,5):
+        if i == 0 or i == 4:
+            print(end="  ")
+        if i == 1 or i == 3:
+            print(end=" ")
+        for j in range(0,5):
+            printableColor = toPrintableColor(colMap[i][j])
+            if printableColor != "_":
+                print(printableColor, "", end="")
+        print()
+    print()
+    
+
 print("start time: ", datetime.now())
+
+iteration = 0
 while True:
     screenshot = pyautogui.screenshot()
     colMap = readColorMap(screenshot)
     
-    
+    #printColMap(iteration, colMap)
     
     # drop to suitable slot
     if findSuitable(screenshot) == False:
@@ -278,4 +341,6 @@ while True:
     else:
         stuck = 0
         pyautogui.sleep(0.3)
+        
+    iteration += 1
                 
